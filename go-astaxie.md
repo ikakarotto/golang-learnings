@@ -1,17 +1,17 @@
 https://learnku.com/docs/build-web-application-with-golang/about-this-book/3151
 
 
-## Go环境变量
+### 1.0 Go环境变量
 
 ```
 export GOROOT=/usr/local/go
 export GOBIN=$GOROOT/bin
 export PATH=$PATH:$GOBIN
-export GOPATH=$HOME/gopath (可选设置)
+export GOPATH=$HOME/gopath (可选设置, 但很重要, 建议设置)
 
 ```
 
-## Go目录规范
+### Go目录规范
 
 我们在安装 Go 的时候看到需要设置 GOPATH 变量，Go 从 1.1 版本到 1.7 必须设置这个变量，而且不能和 Go 的安装目录一样，这个目录用来存放 Go 源码，Go 的可运行文件，以及相应的编译之后的包文件。所以这个目录下面有三个子目录：**src、bin、pkg**
 
@@ -43,7 +43,7 @@ GOPATH 下的 src 目录就是接下来开发程序的主要目录，所有的�
 
 
 
-### 如何编写应用包
+### 1.2 如何编写应用包
 
 ```bash
 cd $GOPATH/src
@@ -66,7 +66,7 @@ func Sqrt(x float64) float64 {
 
 
 
-### 编译应用
+#### 编译应用
 
 上面我们已经建立了自己的应用包，如何进行编译安装呢？有两种方式可以进行安装
 
@@ -126,7 +126,7 @@ Hello, world.  Sqrt(2) = 1.414213562373095
 
 
 
-## 获取远程包
+#### 获取远程包
 
 go 语言有一个获取远程包的工具就是 `go get`，目前 go get 支持多数开源社区 (例如：github、googlecode、bitbucket、Launchpad)
 
@@ -187,16 +187,13 @@ src/
 
 从上面的结构我们可以很清晰的看到，bin 目录下面存的是编译之后可执行的文件，pkg 下面存放的是应用包，src 下面保存的是应用源代码
 
-————————————————
-原文作者：Go &#25216;&#26415;&#35770;&#22363;&#25991;&#26723;&#65306;&#12298;Go Web &#32534;&#31243;&#65288;&#65289;&#12299;
-转自链接：https://learnku.com/docs/build-web-application-with-golang/012-gopath-and-workspace/3154
-版权声明：著作权归作者所有。商业转载请联系作者获得授权，非商业转载请保留以上作者信息和原文链接。
 
 
 
 
 
-## Go命令
+
+### 1.3 Go命令
 
 https://learnku.com/docs/build-web-application-with-golang/013-go-command/3155
 
@@ -238,7 +235,7 @@ CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build
 
 
 
-## Go 开发工具
+### 1.4 Go 开发工具
 
 - LiteIDE
 - Sublime Text + GoSublime + gocode
@@ -283,7 +280,7 @@ sublime:
 
 ## Go Start
 
-#### Go 关键字
+### 2.0 Go 关键字
 
 ```text
 break    default      func    interface    select
@@ -297,7 +294,7 @@ continue for          import  return       var
 
 
 
-## Go 语言基础
+### 2.1 Go 语言基础
 
 ```go
 package main
@@ -317,7 +314,9 @@ package <pkgName> （在我们的例子中是 `package main` ）这一行告诉�
 
 
 
-### 定义变量
+### 2.2 Go 基础
+
+#### 定义变量
 
 ```
 var variableName type
@@ -340,7 +339,7 @@ _, b := 34, 35
 
 
 
-### 常量
+#### 常量
 
 ```go
 const constantName = value
@@ -372,7 +371,73 @@ Go同时支持`int`和`uint`，这两种类型的长度相同，但具体长度�
 
 `rune` 是 `int32` 的别称，`byte` 是 `uint8` 的别称
 
-不同类型的变量不允许互相赋值或操作
+不同类型的变量不允许互相赋值或操作。
+
+微软bing解释：*`rune` 是 Go 语言的一种特殊数字类型，是 `int32` 的别名，表示字符的 UTF-8 的编码值，用于区分字符值和整数值。它用于处理 Unicode 字符，支持 Unicode 的 1,114,112 个码点。在 Go 语言中，字符可以被分成两种类型处理：对占 1 个字节的英文类字符，可以使用 `byte`（或者 `uint8`）；对占 1 ~ 4 个字节的其他字符，可以使用 `rune`（或者 `int32`），如中文、特殊符号等。*
+
+百度文心一言解释： `rune` 类型：*在Go语言中，`rune`是一种基本类型，用于表示Unicode字符。在Go中，Unicode字符被视为单个Unicode码点（code point），而`rune`就是对Unicode码点的别名。实际上，`rune`是`int32`类型的别名，用于表示从0到4字节的Unicode码点。*
+
+cnblog博主解释：*[详解 Go 中的 rune 类型 - 技术颜良 - 博客园 (cnblogs.com)](https://www.cnblogs.com/cheyunhua/p/16007219.html)*
+
+```go
+package main  
+  
+import "fmt"  
+  
+func main() {  
+    str := "Hello, 世界！" // 包含中文字符的字符串  
+  
+    // 将字符串逐个读取为rune类型  
+    for _, r := range str {  
+        fmt.Println(r) // 输出每个Unicode字符的码点
+    }
+    fmt.Println(len([]rune(str)))
+
+    // 使用内置函数 len() 统计字符串长度
+    fmt.Println(len("Go语言编程"))  // 输出：14  
+    // 转换成 rune 数组后统计字符串长度
+    fmt.Println(len([]rune("Go语言编程")))  // 输出：6
+    fmt.Println([]rune("Go语言编程")[:4]) // 输出：[71 111 35821 35328]
+    fmt.Println(string([]rune("Go语言编程")[:4])) // 输出：Go语言
+    fmt.Println("Go语言编程",len("Go语言编程")) // 14
+    fmt.Println("Go语言编程"[:4]) // go��
+    fmt.Println("Go语言编程"[:5]) // go语
+    fmt.Println("Go语言编程"[:6]) // go语�
+    fmt.Println("Go语言编程"[:7]) // go语��
+    fmt.Println("Go语言编程"[:8]) // go语言
+}
+/*
+72
+101
+108
+108
+111
+44
+32
+19990
+30028
+65281
+10
+
+72: H (U+0048)  
+101: e (U+0065)  
+108: l (U+006C)  
+108: l (U+006C)  
+111: o (U+006F)  
+44: , (U+002C)  
+32:   (U+0020)  
+19990: 世 (U+4E2D)  
+30028: 界 (U+540D)  
+65281:  (U+E331)
+
+*/
+
+/*
+上述代码中，我们定义了一个包含中文字符的字符串str。然后，使用range循环逐个遍历字符串中的字符，将其转换为rune类型并输出每个字符的码点。
+
+注意，由于中文字符和英文字符的编码方式不同，中文字符的码点范围可能超过了int32类型的范围。在这种情况下，Go语言会自动将中文字符的码点扩展到int64类型。因此，在实际使用中，可以放心地处理Unicode字符的码点，而无需考虑超过int32范围的问题。
+*/
+```
 
 
 
@@ -546,6 +611,22 @@ fmt.Println(rating)
 | float64 | 0      |
 | boot    | false  |
 | string  | ""     |
+
+
+
+#### 格式化输出
+
+| 格式化 | 解释 |
+| ------ | ---- |
+| %d     |      |
+| %s     |      |
+| %v     |      |
+| %T     |      |
+| %f     |      |
+|        |      |
+|        |      |
+|        |      |
+|        |      |
 
 
 
