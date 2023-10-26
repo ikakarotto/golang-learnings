@@ -352,6 +352,8 @@ const prefix = "astaxie_"
 
 常量类型：https://go.dev/ref/spec#Constants  http://c.biancheng.net/view/18.html
 
+#### 内置基础类型
+
 | 类型           | 常用类型                   | 说明                  |
 | -------------- | -------------------------- | --------------------- |
 | boolean        | true  false(默认)          | 布尔型                |
@@ -360,6 +362,8 @@ const prefix = "astaxie_"
 | floating-point | float32  float64(默认)     | 浮点型                |
 | complex        | complex64 complex128(默认) | 复数                  |
 | string         |                            | 字符串                |
+
+#### 数值类型
 
 整数类型有无符号和有符号两种。
 
@@ -372,6 +376,8 @@ Go同时支持`int`和`uint`，这两种类型的长度相同，但具体长度�
 `rune` 是 `int32` 的别称，`byte` 是 `uint8` 的别称
 
 不同类型的变量不允许互相赋值或操作。
+
+##### 数值类型——rune
 
 微软bing解释：*`rune` 是 Go 语言的一种特殊数字类型，是 `int32` 的别名，表示字符的 UTF-8 的编码值，用于区分字符值和整数值。它用于处理 Unicode 字符，支持 Unicode 的 1,114,112 个码点。在 Go 语言中，字符可以被分成两种类型处理：对占 1 个字节的英文类字符，可以使用 `byte`（或者 `uint8`）；对占 1 ~ 4 个字节的其他字符，可以使用 `rune`（或者 `int32`），如中文、特殊符号等。*
 
@@ -439,7 +445,14 @@ func main() {
 */
 ```
 
+##### Boolean 布尔型
 
+`bool` 的值为 `true` 或 `false`，默认为 `false`
+
+##### 字符串 string
+
+Go 中的字符串都是采用 `UTF-8` 字符集编码。
+字符串是用一对双引号 `""` 或反引号 ` `` ` 括起来定义
 
 声明一个多行的字符串，使用反撇号 **`** 来声明
 
@@ -448,11 +461,52 @@ m := `hello
     world`
 ```
 
+在 Go 中字符串是不可变的
+
+```go
+	s := "hello"
+	fmt.Println(s)
+
+	fmt.Println(s[0]) // 104
+	//s[0] = "c" // cannot assign to s[0] (strings are immutable)
+
+	c := []byte(s)
+	fmt.Println(c) // [104 101 108 108 111]
+	fmt.Printf("%T\n", c) // []uint8
+	c[0] = 99
+	fmt.Println(string(c)) // cello
+```
+
+##### 错误类型 error
+
+Go 内置有一个 `error` 类型，专门用来处理错误信息，Go 的 package里面还专门有一个包 `errors` 来处理错误：
+
+```go
+package main
+import "fmt"
+import "errors"
+
+func main() {
+    err := errors.New("Error: Unknown type")
+    if err != nil {
+        fmt.Print(err) // Error: Unknown type  结尾没有换行符
+        fmt.Println(err) // Error: Unknown type  结尾有换行符
+        // fmt.Printf(err) // cannot use err (type error) as type string in argument to fmt.Printf
+        fmt.Printf("%v", err) // Error: Unknown type  结尾没有换行符
+    }
+}
+```
+
 
 
 分组声明：go可使用 ( ) 括号来声明一组变量和常量
 
-```
+```go
+import (
+    "fmt"
+    "os"
+)
+
 var (
     i int
     pi float32
@@ -479,10 +533,12 @@ const c,d = iota,iota
 
 
 
+##### Go 程序设计的一些原则
+
 Go 之所以会那么简洁，是因为它有一些默认的行为：
 
-大写字母开头的变量是可导出的，也就是其它包可以读取的，是公有变量；小写字母开头的就是不可导出的，是私有变量。
-大写字母开头的函数也是一样，相当于 class 中的带 public 关键词的公有函数；小写字母开头的就是有 private 关键词的私有函数。
+- 大写字母开头的变量是可导出的，也就是其它包可以读取的，是公有变量；小写字母开头的就是不可导出的，是私有变量。
+- 大写字母开头的函数也是一样，相当于 class 中的带 public 关键词的公有函数；小写字母开头的就是有 private 关键词的私有函数。
 
 
 
@@ -507,6 +563,8 @@ arr[1] = 22
 > 数组不能改变长度
 >
 > n 可以换成 `...` 来自动计算数组长度
+>
+> 数组之间的赋值是值的赋值，即当把一个数组作为参数传入函数的时候，传入的其实是该数组的副本，而不是它的指针。如果要使用指针，那么就需要用到后面介绍的 `slice` 类型了。
 
 **数组可以使用另一种 `:=` 来声明**
 
@@ -524,6 +582,17 @@ doubleArray := [2][4]int{[4]int{1,2,3,4}, [4]int{5,6,7,8}}
 easyArray := [2][4]int{{1,2,3,4},{5,6,7,8}}
 ```
 
+#### slice
+
+在很多应用场景中，数组并不能满足我们的需求。在初始定义数组时，我们并不知道需要多大的数组，因此我们就需要 “动态数组”。在 Go 里面这种数据结构叫 `slice`
+
+`slice` 并不是真正意义上的动态数组，而是一个引用类型。`slice` 总是指向一个底层 `array`，`slice` 的声明也可以像 `array` 一样，只是不需要长度。
+
+```go
+var fslice []int
+slice := []byte {'a','b','c','d'}
+```
+
 对于`slice`有几个有用的内置函数：
 
 > `len` 获取 `slice` 的长度
@@ -533,6 +602,40 @@ easyArray := [2][4]int{{1,2,3,4},{5,6,7,8}}
 > `append` 向 `slice` 里面追加一个或者多个元素，然后返回一个和 `slice` 一样类型的 `slice`
 >
 > `copy` 函数 `copy` 从源 `slice` 的 `src` 中复制元素到目标 `dst` ，并且返回复制的元素的个数
+>
+> 对 `slice` 的 `slice` 可以在 cap 范围内扩展
+
+```go
+    // var srcslice = [6]byte{'a','b','c','d','e','f'} // [6]uint8
+    var srcslice = []byte{'a','b','c','d','e','f'} // []uint8
+    // srcslice = ['a','b','c','d','e','f'] // syntax error: unexpected comma, expecting ]
+    srcslice = []byte{'a','b','c','d','e','f','g','a','b'}
+    var dstslice1, dstslice2 []byte
+    dstslice1 = srcslice[:2]
+    dstslice2 = srcslice[2:5]
+    fmt.Printf("%T %T %T\n", srcslice, dstslice1, dstslice2)
+    fmt.Printf("dstslice1: %s\n", dstslice1) // ab
+    fmt.Printf("dstslice2: %s\n", dstslice2) // cde
+    fmt.Printf("dstslice1: %s\n", dstslice1[:5]) // abcde
+```
+
+从 Go 1.2 开始 slice 支持了三个参数的 `slice`：arraydata[i:j:k]。之前我们一直采用这种方式在 `slice` 或者 `array` 基础上来获取一个 `slice`：arraydata[i:j]
+
+```go
+	var arr [10]int // len=10, cap=10
+	fmt.Printf("%d\n", arr)
+	fmt.Printf("%d %d\n", len(arr), cap(arr))
+
+	sli := arr[2:4] // len=4-2, cap=10-2
+	fmt.Printf("%d\n", sli)
+	fmt.Printf("%d %d\n", len(sli), cap(sli))
+
+	sli2 := arr[2:4:6] // len=4-2, cap=6-2
+	fmt.Printf("%d\n", sli2)
+	fmt.Printf("%d %d\n", len(sli2), cap(sli2)) // 2 4
+```
+
+从以上例子可以看出，slice[i:j:k] 的 len 为 j-i , cap 为 k-i
 
 
 
@@ -542,16 +645,23 @@ easyArray := [2][4]int{{1,2,3,4},{5,6,7,8}}
 
 ```go
 var numbers map[string]int
-numbers := make(map[string]int)
+numbers = make(map[string]int)
 numbers["one"] = 1
 numbers["two"] = 2
 numbers["three"] = 3
 fmt.Println("n3:", numbers["three"])
+
+books := make(map[string]int)
+books["english"] = 3
+
+var d1 = map[string]int{"root":1000,"admin":1001}
+d2 := map[string]int{"root":1000, "administrator": 1002}
+
 ```
 
 > `map` 是无序的，所以每次打印出来的 `map` 都可能会不一样，它不能通过 `index` 获取，必须通过 `key` 获取
 >
-> `map` 的长度是不固定的，也就是和 `slice` 一样，也是一种引用类型
+> `map` 的长度是不固定的，也就是和 `slice` 一样，也是一种**引用类型**
 >
 > 内置的 `len` 函数同样适用于 `map`
 >
@@ -572,17 +682,29 @@ if ok {
 delete(rating,"C")
 rating["Php"] = 4
 fmt.Println(rating)
+
+sql, ok := rating["sql"]
+fmt.Printf("%f %t\n", sql, ok) // 0.000000 false
+```
+
+因为`map` 是一种引用类型，如果两个 `map` 同时指向一个底层，那么一个改变，另一个也相应的改变：
+
+```go
+m := make(map[string]string)
+m["Hello"] = "Bonjour"
+m1 := m
+m1["Hello"] = "Salut"  // 现在m["hello"]的值已经是 Salut 了
 ```
 
 
 
-##### make、new 操作
+#### make、new 操作
 
 `make` 用于内建类型(`map`、`slice` 和 `channel`)的内存分配。
 
-`new`用于各种类型的内存分配。
+`new`用于**各种类型**的内存分配。
 
-内建函数 `new` 本质上说跟其他语言中的同名函数功能一样：`new(T)` 分配了**零值**的 `T` 类型的内存空间，并且返回其地址，即一个 `*T` 类型的值。用Go的术语说，它返回了一个指针，指向新分配的类型 `T` 的零值。
+内建函数 `new` 本质上说跟其他语言中的同名函数功能一样：`new(T)` 分配了**零值**的 `T` 类型的内存空间，并且返回其地址，即一个 `*T` 类型的值。用Go的术语说，它返回了一个**指针**，指向新分配的类型 `T` 的零值。
 
 **省流：```new 返回指针```。**
 
@@ -616,17 +738,28 @@ fmt.Println(rating)
 
 #### 格式化输出
 
-| 格式化 | 解释 |
-| ------ | ---- |
-| %d     |      |
-| %s     |      |
-| %v     |      |
-| %T     |      |
-| %f     |      |
-|        |      |
-|        |      |
-|        |      |
-|        |      |
+| 格式化   | 解释                                                        |
+| -------- | ----------------------------------------------------------- |
+| %d       | 整型以十进制方式显示                                        |
+| %b       | 整型以二进制方式显示                                        |
+| %o       | 整型以八进制方式显示                                        |
+| %x       | 十六进制小写字母                                            |
+| %X       | 十六进制大写字母                                            |
+| %u       |                                                             |
+| %s       | 字符串                                                      |
+| %T       | 输出 Go 语言语法格式的类型和值                              |
+| %t       | 输出布尔型值                                                |
+| %f       | 浮点数  %.2f                                                |
+| %e       |                                                             |
+| %g       |                                                             |
+| %q       | 输出 raw 格式                                               |
+| %v       | 按值的本来值输出，例如使用%v占位符输出map、数组和切片的值   |
+| %+v  %-v | 在 `%v` 基础上，对结构体字段名和值进行展开                  |
+| %#v      | 输出 Go 语言语法格式的值                                    |
+| %U       | Unicode 字符。fmt.Printf("%U", 1234) // 输出: U+1234        |
+| %c       | 以Unicode字符形式输出字符。fmt.Printf("%c", 'A') // 输出: A |
+| %p       | 指针，十六进制方式显示                                      |
+|          |                                                             |
 
 
 
@@ -735,6 +868,77 @@ func main() {
     }
 ```
 
+##### break continue
+
+break 跳出当前循环
+
+continue 跳过本次循环
+
+
+
+#### switch
+
+```go
+switch sExpr {
+case expr1:
+    some instructions
+case expr2:
+    some other instructions
+case expr3:
+    some other instructions
+default:
+    other code
+}
+```
+
+- `sExpr` 和 `expr1`、`expr2`、`expr3` 的类型必须一致
+- 表达式不必是常量或整数，执行的过程从上至下，直到找到匹配项
+- 如果 `switch` 没有表达式，它会匹配 `true`
+- Go 里面 switch 默认相当于每个 case 最后带有 break，匹配成功后不会自动向下执行其他 case，而是跳出整个 switch, 但是可以使用 fallthrough 强制执行后面的 case 代码
+- 当 switch 语句的表达式是一个常量时，可以省略switch 语句中的表达式
+
+```go
+    switch num := 2; num {
+    case 1:
+        fmt.Println("数字是1")
+    case 2:
+        fmt.Println("数字是2")
+    case 3:
+        fmt.Println("数字是3")
+    default:
+        fmt.Println("数字不是1、2或3")
+    }
+
+    num := 2
+    switch num+1 {
+    case 1:
+        fmt.Println("原数字是0")
+    case 2:
+        fmt.Println("原数字是1")
+    case 3:
+        fmt.Println("原数字是2")
+    default:
+        fmt.Println("原数字不是1、2或0")
+    }
+
+    switch time.Now().Weekday() {
+    case time.Saturday, time.Sunday:
+      fmt.Println("It's the weekend")
+    default:
+      fmt.Println("It's a weekday")
+    }
+
+    age := 34
+    switch {
+    case age < 18:
+        fmt.Println("younger")
+    case age > 18:
+        fmt.Println("older than 18")
+    default:
+        fmt.Println("age is not valid")
+    }
+```
+
 
 
 ### 函数
@@ -743,10 +947,683 @@ func main() {
 
 ```go
 func functionName(input1 type1, input2 type2) (output1 type1, output2 type2) {
-    // some staements
+    // some statements
     return output1, output2
 }
 ```
+
+- 关键字 func 用来声明一个函数 funcName
+- 函数可以有一个或者多个参数，每个参数后面带有类型，通过 , 分隔
+- 函数可以返回多个值
+- 上面返回值声明了两个变量 output1 和 output2，如果你不想声明也可以，直接就两个类型
+- 如果只有一个返回值且不声明返回值变量，那么你可以省略 包括返回值 的括号
+- 如果没有返回值，那么就直接省略最后的返回信息
+- 如果有返回值， 那么必须在函数的外层添加 return 语句
+- 如果返回值在定义函数时已经定义了变量名及其类型，返回时可以省略变量名，直接使用 return
+
+```go
+func maxnum(x,y int) int {
+	if x > y {
+		return x
+	}
+	return y
+}
+
+func Swapnum(x,y int) (int, int) {
+	return y, x
+}
+
+func swapnum(x,y int) (e,f int) {
+	e, f = y, x
+    return
+}
+
+func main() {
+	a := 2
+	b := 6
+	c := -3
+
+    max_ab := maxnum(a, b)
+	fmt.Printf("%d\n", max_ab)
+	fmt.Printf("%d\n", maxnum(a, c))
+
+    i, j := Swapnum(a, b)
+	fmt.Printf("%d %d\n", i, j)
+    
+    m, n := swapnum(a, b)
+    fmt.Printf("%d %d\n", m, n)
+}
+```
+
+##### 变参
+
+在 Go 语言中，可以使用可变参数来传递任意数量的参数。可变参数使用三个点（...）表示，它们必须是函数的最后一个参数。
+
+```go
+package main
+
+import "fmt"
+
+func sum(numbers ...int) {
+    sum := 0
+    for _, num := range numbers {
+        sum += num
+    }
+    fmt.Println("Sum:", sum)
+}
+
+func printargs(numbers ...int) {
+	for index, i := range numbers {
+		fmt.Println(index, i)
+	}
+}
+
+func users(groupname string, users ...string) {
+	for _, username := range users {
+		fmt.Println(groupname, username)
+	}
+}
+
+func main() {
+    sum(1, 2, 3) // 输出 "Sum: 6"
+    sum(4, 5, 6, 7, 8, 9) // 输出 "Sum: 39"
+    sum(10, 10, 10, 10, 10) // 输出 "Sum: 50"
+    printargs(1,2,4,3,5)
+    users("administrator", "root", "admin", "ops", "sre", "dev", "secure")
+}
+```
+
+##### 传值与传指针
+
+当我们传一个参数值到被调用函数里面时，实际上是传了这个值的一份 copy，当在被调用函数中修改参数值的时候，调用函数中相应实参不会发生任何变化，因为数值变化只作用在 copy 上。
+
+```go
+package main
+import "fmt"
+
+func add(x int) int {
+	x = x + 1
+	return x
+}
+
+func main() {
+	var a int
+	a = 2
+	fmt.Println(a) // 2
+	b := add(a)
+	fmt.Println(b) // 3
+	fmt.Println(a) // 2
+}
+```
+
+我们知道，变量在内存中是存放于一定地址上的，修改变量实际是修改变量地址处的内存。只有 `add1` 函数知道 `x` 变量所在的地址，才能修改 `x` 变量的值。所以我们需要将 `x` 所在地址 `&x` 传入函数，并将函数的参数的类型由 `int` 改为 `*int`，即改为指针类型，才能在函数中修改 `x` 变量的值。此时参数仍然是按 copy 传递的，只是 copy 的是一个指针。
+
+```go
+package main
+import "fmt"
+
+func add(x *int) int {
+	*x = *x + 1
+	return *x
+}
+
+func main() {
+	var a int
+	a = 2
+	fmt.Println(a) // 2
+	b := add(&a)
+	fmt.Println(b) // 3
+	fmt.Println(a) // 3
+}
+```
+
+传指针的好处：
+
+- 传指针使得多个函数能操作同一个对象
+- 传指针比较轻量级（8 bytes），只是传内存地址，我们可以用指针传递体积大的结构体。如果用参数值传递的话，在每次 copy 上面就会花费相对较多的系统开销（内存和时间）。
+- Go 语言中 `channel`、`slice`、`map` 这三种类型的实现机制类似指针，所以可以直接传递，而不用去地址后传递指针。（注：若函数需改变 `slice` 的长度，则仍需要取地址传递指针）
+
+
+
+##### defer 延迟语句
+
+在函数中添加多个 defer 语句，当函数执行到最后时，这些 defer 语句会按照逆序执行，最后该函数返回。
+
+```go
+
+func ReadWrite() bool {
+    file.Open("file")
+    defer file.Close()
+    if failureX {
+        return false
+    }
+    if failureY {
+        return false
+    }
+    return true
+}
+```
+
+如果有很多调用 `defer`，那么 `defer` 是采用后进先出模式，所以如下代码会输出 `4 3 2 1 0`
+
+```go
+
+func main() {
+	numlist := []int{1,2,3,4,5}
+	for index, i := range numlist {
+		defer fmt.Printf("%d,%d\n", index, i)
+	}
+
+	for i := 0; i < 3; i++ {
+		defer fmt.Printf("%d\n", i)
+	}
+
+	// 2 1 0
+	// 4,5 3,4 2,3 1,2 0,1
+}
+```
+
+##### 函数作为值、类型
+
+在 Go 中函数也是一种变量，我们可以通过 `type` 来定义它，它的类型就是所有拥有相同的参数，相同的返回值的一种类型
+
+```go
+type typeName func(input1 inputType1 , input2 inputType2 [, ...]) (result1 resultType1 [, ...])
+```
+
+```go
+
+package main
+
+import "fmt"
+
+type testInt func(int) bool // 声明了一个函数类型
+
+func isOdd(integer int) bool {
+    if integer%2 == 0 {
+        return false
+    }
+    return true
+}
+
+func isEven(integer int) bool {
+    if integer%2 == 0 {
+        return true
+    }
+    return false
+}
+
+// 声明的函数类型在这个地方当做了一个参数
+
+func filter(slice []int, f testInt) []int {
+    var result []int
+    for _, value := range slice {
+        if f(value) {
+            result = append(result, value)
+        }
+    }
+    return result
+}
+
+func main(){
+    slice := []int {1, 2, 3, 4, 5, 7}
+    fmt.Println("slice = ", slice)
+    odd := filter(slice, isOdd)    // 函数当做值来传递了
+    fmt.Println("Odd elements of slice are: ", odd)
+    even := filter(slice, isEven)  // 函数当做值来传递了
+    fmt.Println("Even elements of slice are: ", even)
+}
+```
+
+
+
+##### panic 和 recover
+
+> Go 没有像 Java 那样的异常机制，它不能抛出异常，而是使用了 panic 和 recover 机制。
+> 一定要记住，你应当把它作为最后的手段来使用，也就是说，你的代码中应当没有，或者很少有 panic 的东西。
+
+**panic**
+
+是一个内建函数，可以中断原有的控制流程，进入一个令人恐慌的流程中。
+当函数 `F` 调用 `panic`，函数 `F` 的执行被中断，但是 `F` 中的延迟函数会正常执行，然后 `F`返回到调用它的地方。在调用的地方，`F` 的行为就像调用了 `panic`。这一过程继续向上，直到发生 `panic` 的 `goroutine` 中所有调用的函数返回，此时程序退出。
+恐慌可以直接调用 `panic` 产生。也可以由运行时错误产生，例如访问越界的数组。
+
+```go
+var user = os.Getenv("USER")
+
+func init() {
+    if user == "" {
+        panic("no value for $USER")
+    }
+}
+```
+
+**recover**
+
+是一个内建的函数，可以让进入令人恐慌的流程中的 `goroutine` 恢复过来。`recover` 仅在延迟函数中有效。在正常的执行过程中，调用 `recover` 会返回 `nil`，并且没有其它任何效果。如果当前的 `goroutine` 陷入恐慌，调用 `recover` 可以捕获到 `panic` 的输入值，并且恢复正常的执行。
+
+```go
+func throwsPanic(f func()) (b bool) {
+    defer func() {
+        if x := recover(); x != nil {
+            b = true
+        }
+    }()
+    f() // 执行函数f，如果f中出现了panic，那么就可以恢复回来
+    return
+}
+```
+
+
+
+##### main 函数和 init 函数
+
+Go 里面有两个保留的函数：
+
+- `init` 函数（能够应用于所有的 `package` ）
+
+- `main` 函数（只能应用于 `package main`）。
+
+这两个函数在定义时不能有任何的参数和返回值。虽然一个 `package` 里面可以写任意多个 `init` 函数，但这无论是对于可读性还是以后的可维护性来说，我们都强烈建议用户在一个 `package` 中每个文件只写一个 init 函数。
+
+Go 程序会自动调用 `init()` 和 `main()`，所以你不需要在任何地方调用这两个函数。每个 `package` 中的 `init` 函数都是可选的，但 `package main` 就必须包含一个 `main` 函数。
+
+程序的初始化和执行都起始于 `main` 包。如果 `main` 包还导入了其它的包，那么就会在编译时将它们依次导入。
+
+有时一个包会被多个包同时导入，那么它只会被导入一次（例如很多包可能都会用到 `fmt` 包，但它只会被导入一次。
+
+当一个包被导入时，如果该包还导入了其它的包，那么会先将其它包导入进来，然后再对这些包中的包级常量和变量进行初始化，接着执行 `init` 函数（如果有的话），依次类推。
+
+等所有被导入的包都加载完毕了，就会开始对 `main` 包中的包级常量和变量进行初始化，然后执行 `main` 包中的 `init` 函数（如果存在的话），最后执行 `main` 函数。下图详细地解释了整个执行过程：
+
+![img](https://cdn.learnku.com/build-web-application-with-golang/images/2.3.init.png?raw=true)
+
+#### import
+
+通常导入方式：
+
+```go
+import "fmt"
+import "os"
+
+import (
+    "fmt"
+    "os"
+)
+```
+
+调用：
+
+```go
+fmt.Println("hello world")
+```
+
+上面这个 fmt 是 Go 语言的标准库，其实是去 `GOROOT` 环境变量指定目录下去加载该模块
+
+当然 Go 的 import 还支持如下两种方式来加载自己写的模块：
+
+- 相对路径：```import "./model"``` // 当前文件同一目录的 model 目录，但是不建议这种方式来 import
+
+- 绝对路径：```import "shorturl/model"``` // 加载 gopath/src/shorturl/model 模块
+
+**特殊的 import**
+
+1、点操作
+
+```go
+import (
+    . "fmt"
+)
+// 这个点操作的含义就是这个包导入之后在你调用这个包的函数时，你可以省略前缀的包名，也就是前面你调用的 fmt.Println ("hello world") 可以省略的写成 Println ("hello world")
+```
+
+2、别名操作
+
+```go
+import(
+    f "fmt"
+)
+// 别名操作的话调用包函数时前缀变成了我们的前缀，即 f.Println ("hello world")
+```
+
+3、_ 操作
+
+```go
+import (
+    "database/sql"
+    _ "github.com/ziutek/mymysql/godrv"
+)
+// _操作其实是引入该包，而不直接使用包里面的函数，而是调用了该包里面的 init 函数。
+
+```
+
+
+
+#### struct
+
+Go 语言中，也和 C 或者其他语言一样，我们可以声明新的类型，作为其它类型的属性或字段的容器。例如，我们可以创建一个自定义类型 `person` 代表一个人的实体。这个实体拥有属性：姓名和年龄。这样的类型我们称之 `struct`。
+
+结构体定义：
+
+```go
+type person struct {
+    name string
+    age int
+}
+```
+
+声明并使用 struct 的方式：
+
+```go
+// 声明类型并赋值
+var P person
+P.name, P.age = "Tom", 25
+
+// 按照顺序提供初始化值
+P := person{"Tom", 25}
+
+// 通过 field:value 的方式初始化，这样可以任意顺序
+P := person{age: 25, name: "Tom"}
+
+// 通过 new 函数分配一个指针，此处 P 的类型为 *person
+P := new(person) // 相当于 var P *person   P = new(person)
+P.name, P.age = "Tom", 25
+fmt.Printf("%v\n", P) // &{Tom 25}
+fmt.Printf("%v\n", *P) // {Tom 25}
+fmt.Printf("%v\n", &P) // 0xc000006028
+
+var P *person
+P = new(person)
+P.name, P.age = "Sam", 23
+fmt.Printf("%v\n", *P) // {Sam 23}
+```
+
+
+
+```go
+package main
+
+import "fmt"
+
+// 声明一个新的类型
+type person struct {
+    name string
+    age int
+}
+
+// 比较两个人的年龄，返回年龄大的那个人，并且返回年龄差
+// struct 也是传值的
+func Older(p1, p2 person) (person, int) {
+    if p1.age>p2.age {  // 比较 p1 和 p2 这两个人的年龄
+        return p1, p1.age-p2.age
+    }
+    return p2, p2.age-p1.age
+}
+
+func main() {
+    var tom person
+
+    // 赋值初始化
+    tom.name, tom.age = "Tom", 18
+
+    // 两个字段都写清楚的初始化
+    bob := person{age:25, name:"Bob"}
+
+    // 按照 struct 定义顺序初始化值
+    paul := person{"Paul", 43}
+
+    tb_Older, tb_diff := Older(tom, bob)
+    tp_Older, tp_diff := Older(tom, paul)
+    bp_Older, bp_diff := Older(bob, paul)
+
+    fmt.Printf("Of %s and %s, %s is older by %d years\n",
+        tom.name, bob.name, tb_Older.name, tb_diff)
+
+    fmt.Printf("Of %s and %s, %s is older by %d years\n",
+        tom.name, paul.name, tp_Older.name, tp_diff)
+
+    fmt.Printf("Of %s and %s, %s is older by %d years\n",
+        bob.name, paul.name, bp_Older.name, bp_diff)
+}
+```
+
+
+
+##### struct 匿名字段
+
+Go 支持只提供类型，而不写字段名的方式，也就是匿名字段，也称为嵌入字段。
+
+当匿名字段是一个 struct 的时候，那么这个 struct 所拥有的全部字段都被隐式地引入了当前定义的这个 struct。
+
+匿名字段不仅仅是 struct 类型哦，所有的内置类型和自定义类型都是可以作为匿名字段。
+
+如果我们想访问重载后对应匿名类型里面的字段，可以通过匿名字段名来访问。
+
+```go
+package main
+
+import (
+    "fmt"
+    "reflect"
+)
+
+type Group struct {
+    Name string
+}
+
+type City map[string]string
+
+type Person struct {
+    Group // 匿名字段
+    Cityinfo City
+    Name string
+    Age  int
+    idField int
+    mapField map[string]int
+}
+
+func main() {
+    p := Person{
+        Group: Group{"Fale"},
+        Cityinfo: map[string]string{"CountryCode":"CN", "CityCode":"GD"},
+        Name: "John",
+        Age:  30,
+        idField: 123,
+        mapField: map[string]int{"key": 456},
+    }
+
+    t := reflect.TypeOf(p)
+    fmt.Printf("%v\n", t) // main.Person
+
+    for i := 0; i < t.NumField(); i++ {
+        f := t.Field(i)
+        if !f.Anonymous {
+            fmt.Printf("nameField: %s %v\n", f.Name, f.Type)
+        } else {
+            fmt.Printf("anonymousField: %s %v\n", f.Name, f.Type)
+        }
+    }
+    fmt.Printf("%v\n", p) // {{Fale} map[CityCode:GD CountryCode:CN] John 30 123 map[key:456]}
+}
+```
+
+```go
+package main
+
+import (
+    "fmt"
+    "reflect"
+)
+
+type Group struct {
+    Name string
+}
+
+type City map[string]string
+
+type Person struct {
+    Group // 匿名字段
+    Cityinfo City
+    Name string
+    Age  int
+    idField int
+    mapField map[string]int
+}
+
+func main() {
+    p := Person{
+        Group: Group{"Fale"},
+        Cityinfo: map[string]string{"CountryCode":"CN", "CityCode":"GD"},
+        Name: "John",
+        Age:  30,
+        idField: 123,
+        mapField: map[string]int{"key": 456},
+    }
+
+    t := reflect.TypeOf(p)
+    fmt.Printf("%v\n", t) // main.Person
+    
+
+    for i := 0; i < t.NumField(); i++ {// NumField() 方法，返回结构体中的字段数量
+        f := t.Field(i)
+        // fmt.Printf("%v\n", reflect.TypeOf(f)) // reflect.StructField
+        // 标识获取 Person 结构体中的第 i 个字段的信息，赋值给变量 f
+        // f 的属性有 Name Type Tag Offset Index Anonymous , 例如 mapField map[string]int  56 [5] false
+        // fmt.Printf("%v\n", f)
+        fmt.Printf("%s %s %v %d %d %t\n", f.Name, f.Type, f.Tag, f.Offset, f.Index, f.Anonymous)
+        if !f.Anonymous {
+            fmt.Printf("nameField: %s %v\n", f.Name, f.Type)
+        } else {
+            fmt.Printf("anonymousField: %s %v\n", f.Name, f.Type)
+        }
+    }
+    fmt.Printf("%v\n", p) // {{Fale} map[CityCode:GD CountryCode:CN] John 30 123 map[key:456]}
+}
+```
+
+
+
+```go
+package main
+import "fmt"
+
+type Subject []string
+
+type Class struct {
+	name string
+	classid   int
+}
+
+type Person struct {
+	name string
+	age  int
+	Class
+	subject Subject
+}
+
+func Older(user1, user2 Person) (Person, int) {
+	if user1.age > user2.age {
+		return user1, user1.age - user2.age
+	}
+	return user2, user2.age - user1.age
+}
+
+func main() {
+	P := Person{
+		"John",
+		25,
+		Class{
+			classid: 3,
+			name: "Primary2",
+		},
+		[]string{"chinese","math"},
+	}
+	fmt.Printf("%v\n", P) // {John 25 {Primary2 3} [chinese math]}
+
+	Sarry := new(Person)
+	Sarry.name, Sarry.age = "Sarry", 23
+	Sarry.Class.name, Sarry.classid = "Primary3", 3
+	Sarry.subject = []string{"chinese","math","english"}
+	fmt.Printf("%v\n", Sarry) //&{Sarry 23 {Primary3 3} [chinese math english]}
+	fmt.Printf("%v\n", *Sarry) //{Sarry 23 {Primary3 3} [chinese math english]}
+
+	var Tom Person
+	Tom = Person{
+		"Tom",
+		20,
+		Class{
+			"Primary2",
+			3,
+		},
+		[]string{"chinese","math"},
+	}
+	fmt.Printf("%v\n", Tom) // {Tom 20 {Primary2 3} [chinese math]}
+
+	older1, age_larger1 := Older(Tom, *Sarry)
+	fmt.Printf("The older of Tom and Sarry is: %s, %s is older than %d years.\n", older1.name, older1.name, age_larger1) // The older of Tom and Sarry is: Sarry, Sarry is older than 3 years.
+
+	Tom.age += 5
+	older2, _ := Older(Tom, *Sarry)
+	fmt.Printf("The older of Tom and Sarry is: %s, %s's classname is %s, subject is %v.\n", older2.name, older2.name, older2.Class.name, older2.subject) // The older of Tom and Sarry is: Tom, Tom's classname is Primary2, subject is [chinese math].
+}
+```
+
+
+
+```go
+package main
+import "fmt"
+
+type User struct {
+	Name string
+	age  int
+	int
+}
+
+type Subjects []string
+type Student struct {
+	User
+	int
+	string
+	Subjects
+}//匿名字段不仅仅是 struct 类型哦，所有的内置类型和自定义类型都是可以作为匿名字段。
+
+func main() {
+	Tom := Student{
+		User{
+			"Tom",
+			23,
+			999,
+		},
+		10,
+		"ChineseSubjector",
+		[]string{"Chinese","math"},
+	}
+
+	fmt.Printf("%s\n", Tom) // {{Tom %!s(int=23) %!s(int=999)} %!s(int=10) ChineseSubjector [Chinese math]}
+	fmt.Printf("%s %d\n", Tom.Name, Tom.age) // Tom 23
+	fmt.Printf("%v\n", Tom.Subjects) // [Chinese math]
+	fmt.Printf("%v\n", Tom.int) // 10
+	fmt.Printf("%v\n", Tom.User.int) // 999
+}
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
